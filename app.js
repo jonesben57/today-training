@@ -417,6 +417,8 @@ const PLAN = {
   // if the day is too tall, or loosen it (up to 1.5×) if there's room to spare.
   function fitToScreen() {
     const root = document.documentElement;
+    const main = document.getElementById("app");
+    if (main) main.style.minHeight = `${window.innerHeight}px`; // keeps the switch at the very bottom
     const step = (k, by) => Math.round((k + by) * 10) / 10;
     const fits = (k) => {
       root.style.setProperty("--k", String(k));
@@ -429,6 +431,33 @@ const PLAN = {
       while (k > 0.3 && !fits(k)) k = step(k, -0.1);
     }
     root.style.setProperty("--k", String(k));
+  }
+
+  // The light/dark switch at the bottom. Until it's tapped, it follows the phone's setting;
+  // after that it remembers the choice ("today.theme" on the phone).
+  const THEME_KEY = "today.theme";
+
+  function setupThemeSwitch() {
+    const button = document.getElementById("theme");
+    if (!button) return;
+    const root = document.documentElement;
+    const phoneIsDark = window.matchMedia("(prefers-color-scheme: dark)");
+    const isDark = () => (root.dataset.theme ? root.dataset.theme === "dark" : phoneIsDark.matches);
+
+    const show = () => {
+      button.setAttribute("aria-checked", String(isDark()));
+      const bg = getComputedStyle(root).getPropertyValue("--bg").trim();
+      for (const meta of document.querySelectorAll('meta[name="theme-color"]')) meta.setAttribute("content", bg);
+    };
+
+    button.addEventListener("click", () => {
+      const next = isDark() ? "light" : "dark";
+      root.dataset.theme = next;
+      try { localStorage.setItem(THEME_KEY, next); } catch (_) { /* not saved, still switched */ }
+      show();
+    });
+    if (phoneIsDark.addEventListener) phoneIsDark.addEventListener("change", show);
+    show();
   }
 
   function openStorage() {
@@ -492,6 +521,7 @@ const PLAN = {
     window.addEventListener("resize", fitToScreen); // rotation, Safari's bars appearing
     if (document.fonts) document.fonts.ready.then(fitToScreen); // real fonts change line widths
 
+    setupThemeSwitch();
     refresh();
     document.body.setAttribute("data-ready", "");
     startOffline();

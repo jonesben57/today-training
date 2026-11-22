@@ -26,6 +26,12 @@
 
   <link rel="stylesheet" href="styles.css">
   <script>
+    // Apply a saved light/dark choice before anything is drawn, so there's no flash.
+    try {
+      var theme = localStorage.getItem("today.theme");
+      if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
+    } catch (e) { /* no storage: follow the phone */ }
+
     // If app.js can't start (say, a typo after editing the plan), say so instead of showing a blank page.
     addEventListener("error", function (event) {
       var main = document.getElementById("app");
@@ -47,6 +53,11 @@
            aria-valuemin="0" aria-valuemax="0" aria-valuenow="0"></div>
     </header>
     <ol class="timeline" id="timeline"></ol>
+    <footer class="foot">
+      <button type="button" class="theme" id="theme" role="switch" aria-checked="false">
+        <span>Dark mode</span><span class="switch" aria-hidden="true"></span>
+      </button>
+    </footer>
   </main>
 </body>
 </html>
