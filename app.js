@@ -67,7 +67,7 @@ const PLAN = {
   //   gym: true   → the day's exercises appear under this item
   //   track: true → only on days with a run; shows as "Track · 6 × 400 m"
   trainingDay: [
-    { time: "5:45am",    title: "Snack",     detail: "2 kiwis or a banana + ½ scoop whey in water" },
+    { time: "5:45am",    title: "Snack" },
     { time: "6:00am",    title: "Gym",       gym: true },
     { time: "Then",      title: "Swim",      detail: "30 min easy" },
     { time: "After",     title: "Breakfast" },
@@ -342,12 +342,13 @@ const PLAN = {
     return el("span", { class: "mark", "aria-hidden": "true" }, svg);
   }
 
-  // Keep "400 m", "60 s", "4 × 5–6" and "½ scoop" from splitting across two lines.
+  // Keep "400 m", "60 s", "4 × 5–6", "½ scoop" and "each leg" from splitting across two lines.
   function tidy(text) {
     return String(text)
       .replace(/(\d) (s|m|min|km|kg)\b/g, "$1 $2")
       .replace(/ × /g, " × ")
-      .replace(/([½¼¾⅓⅔]) /g, "$1 ");
+      .replace(/([½¼¾⅓⅔]) /g, "$1 ")
+      .replace(/\b(each|per) (\w)/g, "$1 $2"); // "each leg" stays on one line
   }
 
   // One tappable line. Exercises get a station number ("01") and their sets underneath.
@@ -400,6 +401,24 @@ const PLAN = {
     view.progress.setAttribute("aria-valuetext", `${done} of ${total} done`);
   }
 
+  // Make the whole day fill exactly one screen: tighten the spacing (--k in styles.css)
+  // if the day is too tall, or loosen it (up to 1.5×) if there's room to spare.
+  function fitToScreen() {
+    const root = document.documentElement;
+    const step = (k, by) => Math.round((k + by) * 10) / 10;
+    const fits = (k) => {
+      root.style.setProperty("--k", String(k));
+      return root.scrollHeight <= window.innerHeight;
+    };
+    let k = 1;
+    if (fits(k)) {
+      while (k < 1.5 && fits(step(k, 0.1))) k = step(k, 0.1);
+    } else {
+      while (k > 0.3 && !fits(k)) k = step(k, -0.1);
+    }
+    root.style.setProperty("--k", String(k));
+  }
+
   function openStorage() {
     try {
       const storage = window.localStorage;
@@ -433,6 +452,7 @@ const PLAN = {
         store.prune(day.key);
         draw(day, view);
         paint(day, ticks, view);
+        fitToScreen();
       }
       clearTimeout(timer);
       timer = setTimeout(refresh, msUntilNextCheck(new Date(), PLAN.timeZone));
@@ -457,6 +477,8 @@ const PLAN = {
     });
     window.addEventListener("pageshow", refresh);
     window.addEventListener("focus", refresh);
+    window.addEventListener("resize", fitToScreen); // rotation, Safari's bars appearing
+    if (document.fonts) document.fonts.ready.then(fitToScreen); // real fonts change line widths
 
     refresh();
     document.body.setAttribute("data-ready", "");

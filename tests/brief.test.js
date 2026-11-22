@@ -34,7 +34,7 @@ const LEGS = [
 ];
 
 const trainingDay = (track) => [
-  ["5:45am", "Snack", "2 kiwis or a banana + ½ scoop whey in water"],
+  ["5:45am", "Snack", ""],
   ["6:00am", "Gym", ""],
   ["Then", "Swim", "30 min easy"],
   ["After", "Breakfast", ""],
