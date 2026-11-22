@@ -73,7 +73,7 @@ const PLAN = {
     { time: "5:45am",    title: "Snack" },
     { time: "6:00am",    title: "Gym",        gym: true },
     { time: "Then",      title: "Swim",       detail: "30 min easy" },
-    { time: "After",     title: "Breakfast" },
+    { time: "8:00am",    title: "Breakfast" },
     { time: "9am–1pm",   title: "University", days: WEEKDAYS },
     { time: "1pm–2pm",   title: "Lunch" },
     { time: "2pm–5pm",   title: "University", days: WEEKDAYS },
