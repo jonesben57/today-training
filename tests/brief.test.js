@@ -33,12 +33,28 @@ const LEGS = [
   ["Leg extension", "1 × 10–15"],
 ];
 
+// Mon–Fri: uni either side of lunch; Track after uni on run days.
 const trainingDay = (track) => [
   ["5:45am", "Snack", ""],
   ["6:00am", "Gym", ""],
   ["Then", "Swim", "30 min easy"],
   ["After", "Breakfast", ""],
+  ["9am–1pm", "University", ""],
+  ["1pm–2pm", "Lunch", ""],
+  ["2pm–5pm", "University", ""],
   ...(track ? [["After uni", ...track]] : []),
+  ["7pm–8pm", "Dinner", ""],
+  ["10:00pm", "Sleep", ""],
+];
+
+// Sat–Sun: no uni.
+const weekendDay = [
+  ["5:45am", "Snack", ""],
+  ["6:00am", "Gym", ""],
+  ["Then", "Swim", "30 min easy"],
+  ["After", "Breakfast", ""],
+  ["1pm–2pm", "Lunch", ""],
+  ["7pm–8pm", "Dinner", ""],
   ["10:00pm", "Sleep", ""],
 ];
 
@@ -63,11 +79,17 @@ test("Tuesday: Legs, no track", () => {
   assert.deepEqual(exercises(day), LEGS);
 });
 
-test("Wednesday: Rest, and only 10:00pm Sleep", () => {
+test("Wednesday: Rest, with uni, lunch, dinner and sleep but no gym", () => {
   const day = dayAt("2026-11-25T09:00:00+11:00");
   assert.equal(day.title, "Rest");
   assert.equal(day.note, "");
-  assert.deepEqual(lines(day), [["10:00pm", "Sleep", ""]]);
+  assert.deepEqual(lines(day), [
+    ["9am–1pm", "University", ""],
+    ["1pm–2pm", "Lunch", ""],
+    ["2pm–5pm", "University", ""],
+    ["7pm–8pm", "Dinner", ""],
+    ["10:00pm", "Sleep", ""],
+  ]);
 });
 
 test("Thursday: Push + run, with the track session at 96 s per 400 m", () => {
@@ -78,14 +100,14 @@ test("Thursday: Push + run, with the track session at 96 s per 400 m", () => {
 });
 
 test("Friday Pull, Saturday Legs, Sunday Push, none with a track session", () => {
-  for (const [date, title, list] of [
-    ["2026-11-27", "Pull", PULL],
-    ["2026-11-28", "Legs", LEGS],
-    ["2026-11-29", "Push", PUSH],
+  for (const [date, title, list, timeline] of [
+    ["2026-11-27", "Pull", PULL, trainingDay(null)],
+    ["2026-11-28", "Legs", LEGS, weekendDay],
+    ["2026-11-29", "Push", PUSH, weekendDay],
   ]) {
     const day = dayAt(`${date}T09:00:00+11:00`);
     assert.equal(day.title, title, date);
-    assert.deepEqual(lines(day), trainingDay(null), date);
+    assert.deepEqual(lines(day), timeline, date);
     assert.deepEqual(exercises(day), list, date);
   }
 });

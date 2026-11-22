@@ -37,9 +37,9 @@ for (const [date, weekday, label] of FIRST_WEEK) {
   test(`${label} shows ${weekday}'s session from 00:00 to 23:59:59.999`, () => {
     const plan = PLAN.week[weekday];
     const isRest = !plan.workout && !plan.run;
-    const timeline = isRest
-      ? PLAN.restDay
-      : PLAN.trainingDay.filter((e) => (!e.gym || plan.workout) && (!e.track || plan.run));
+    const timeline = (isRest ? PLAN.restDay : PLAN.trainingDay)
+      .filter((e) => !e.days || e.days.includes(weekday))
+      .filter((e) => (!e.gym || plan.workout) && (!e.track || plan.run));
 
     for (const clock of ["00:00:00.000", "05:45:00.000", "12:00:00.000", "23:59:59.999"]) {
       const day = dayAt(`${date}T${clock}+11:00`);

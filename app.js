@@ -7,6 +7,8 @@
    The code underneath adapts on its own. Keep the quotes and commas.
    ============================================================================= */
 
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+
 const PLAN = {
   // "Today" is worked out in this time zone. Use null to follow the phone's own setting.
   timeZone: "Australia/Sydney",
@@ -66,17 +68,26 @@ const PLAN = {
   // Training-day timeline, top to bottom.
   //   gym: true   → the day's exercises appear under this item
   //   track: true → only on days with a run; shows as "Track · 6 × 400 m"
+  //   days: [...] → only on those days (leave out = every day)
   trainingDay: [
     { time: "5:45am",    title: "Snack" },
-    { time: "6:00am",    title: "Gym",       gym: true },
-    { time: "Then",      title: "Swim",      detail: "30 min easy" },
+    { time: "6:00am",    title: "Gym",        gym: true },
+    { time: "Then",      title: "Swim",       detail: "30 min easy" },
     { time: "After",     title: "Breakfast" },
-    { time: "After uni", title: "Track",     track: true },
+    { time: "9am–1pm",   title: "University", days: WEEKDAYS },
+    { time: "1pm–2pm",   title: "Lunch" },
+    { time: "2pm–5pm",   title: "University", days: WEEKDAYS },
+    { time: "After uni", title: "Track",      track: true },
+    { time: "7pm–8pm",   title: "Dinner" },
     { time: "10:00pm",   title: "Sleep" },
   ],
 
-  // Rest-day timeline.
+  // Rest-day timeline (same "days" rule).
   restDay: [
+    { time: "9am–1pm",   title: "University", days: WEEKDAYS },
+    { time: "1pm–2pm",   title: "Lunch" },
+    { time: "2pm–5pm",   title: "University", days: WEEKDAYS },
+    { time: "7pm–8pm",   title: "Dinner" },
     { time: "10:00pm",   title: "Sleep" },
   ],
 };
@@ -182,6 +193,7 @@ const PLAN = {
 
     const items = [];
     for (const entry of isRest ? plan.restDay : plan.trainingDay) {
+      if (entry.days && !entry.days.includes(DAY_KEYS[date.weekday])) continue;
       if (entry.gym && !today.workout) continue;
       if (entry.track && !today.run) continue;
 
