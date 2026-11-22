@@ -106,6 +106,7 @@ const PLAN = {
   const MAX_WAIT_MS = 60 * 1000;   // the date is re-checked at least once a minute…
   const AFTER_MIDNIGHT_MS = 250;   // …and this long after every midnight
   const STORE_PREFIX = "today.ticks.";
+  const LOG_PREFIX = "today.log.";
 
   /* ------------------------------------------------------------- dates -- */
 
@@ -216,7 +217,9 @@ const PLAN = {
 
       if (entry.track) {
         const track = plan.track;
-        item.title = `${entry.title} · ${trackRepeats(date.key, track)} × ${track.distance}`;
+        const repeats = trackRepeats(date.key, track);
+        item.track = { label: entry.title, repeats, distance: track.distance };
+        item.title = trackTitle(item, repeats);
         item.detail = [today.run, track.rest].filter(Boolean).join(" · ");
       }
 
@@ -232,6 +235,15 @@ const PLAN = {
       items,
     };
   }
+
+  // "Track · 6 × 400 m" with however many laps were actually run.
+  function trackTitle(item, laps) {
+    return `${item.track.label} · ${laps} × ${item.track.distance}`;
+  }
+
+  const MIN_LAPS = 1;
+  const MAX_LAPS = 40;
+  const clampLaps = (n) => Math.max(MIN_LAPS, Math.min(MAX_LAPS, Math.round(n)));
 
   /* ------------------------------------------------------------ ticks -- */
 
@@ -302,7 +314,9 @@ const PLAN = {
     };
   }
 
-  // Ticks are kept per date: "today.ticks.2026-11-23" → ["snack", "gym/bench-press", …]
+  // Everything is kept on the phone, per date, and never deleted (that's the log):
+  //   "today.ticks.2026-11-23" → ["snack", "gym/bench-press", …]
+  //   "today.log.2026-11-23"   → { title: "Pull + run", done: 7, total: 14, laps: 6 }
   function createStore(storage) {
     const attempt = (fn, fallback) => {
       try { return fn(); } catch (_) { return fallback; }
@@ -315,18 +329,68 @@ const PLAN = {
       save(key, ticks) {
         attempt(() => storage.setItem(STORE_PREFIX + key, JSON.stringify([...ticks])));
       },
-      // Forget every other day's ticks. Only touches keys starting with "today.ticks.".
-      prune(keepKey) {
-        attempt(() => {
-          const old = [];
+      loadRecord(key) {
+        const saved = attempt(() => JSON.parse(storage.getItem(LOG_PREFIX + key)), null);
+        return saved && typeof saved === "object" && !Array.isArray(saved) ? saved : null;
+      },
+      saveRecord(key, record) {
+        attempt(() => storage.setItem(LOG_PREFIX + key, JSON.stringify(record)));
+      },
+      // Every saved day: { "2026-11-23": { title, done, total, laps }, … }
+      records() {
+        return attempt(() => {
+          const out = {};
           for (let i = 0; i < storage.length; i++) {
             const k = storage.key(i);
-            if (k && k.startsWith(STORE_PREFIX) && k !== STORE_PREFIX + keepKey) old.push(k);
+            if (k && k.startsWith(LOG_PREFIX)) {
+              const record = this.loadRecord(k.slice(LOG_PREFIX.length));
+              if (record) out[k.slice(LOG_PREFIX.length)] = record;
+            }
           }
-          old.forEach((k) => storage.removeItem(k));
-        });
+          return out;
+        }, {});
       },
     };
+  }
+
+  // What the log keeps about a day.
+  function summarize(day, ticks, laps) {
+    const { done, total } = progressOf(day, ticks);
+    const track = day.items.find((item) => item.track);
+    const record = { title: day.title, done, total };
+    if (track) {
+      record.laps = laps == null ? track.track.repeats : laps;
+      record.distance = track.track.distance;
+    }
+    return record;
+  }
+
+  // The log, newest first: every day from the first saved one to today, so days
+  // the app wasn't used still show up (empty).
+  function logEntries(records, todayKey, plan) {
+    const keys = Object.keys(records).filter((k) => k <= todayKey).sort();
+    const start = keys.length ? dayNumberOfKey(keys[0]) : dayNumberOfKey(todayKey);
+    const end = dayNumberOfKey(todayKey);
+    const entries = [];
+    for (let n = end; n >= start; n--) {
+      const d = new Date(n * DAY_MS);
+      const key = d.toISOString().slice(0, 10);
+      const weekday = d.getUTCDay();
+      const record = records[key] || null;
+      const planned = plan.week[DAY_KEYS[weekday]] || { title: "Rest" };
+      entries.push({
+        key,
+        isToday: key === todayKey,
+        label: `${DAY_NAMES[weekday].slice(0, 3)} ${d.getUTCDate()} ${MONTH_NAMES[d.getUTCMonth()].slice(0, 3)}`,
+        title: record ? record.title : planned.title,
+        done: record ? record.done : 0,
+        total: record ? record.total : 0,
+        complete: Boolean(record && record.total > 0 && record.done === record.total),
+        laps: record && record.laps != null ? record.laps : null,
+        distance: record ? record.distance || null : null,
+      });
+    }
+    return entries;
   }
 
   /* ----------------------------------------------------------- screen -- */
@@ -391,6 +455,13 @@ const PLAN = {
         li.append(el("ul", { class: "sub" },
           ...item.children.map((child, i) => el("li", null, row(child, i + 1)))));
       }
+      if (item.track) {
+        // − / + to log how many laps were actually run (sits beside the row, not inside it).
+        li.classList.add("has-laps");
+        li.append(el("span", { class: "laps" },
+          el("button", { type: "button", class: "lap", "data-step": "-1", "aria-label": "One lap fewer" }, "−"),
+          el("button", { type: "button", class: "lap", "data-step": "1", "aria-label": "One lap more" }, "+")));
+      }
       return li;
     }));
     const rows = [...view.list.querySelectorAll(".row")];
@@ -401,10 +472,13 @@ const PLAN = {
     view.buttons = new Map(rows.map((button) => [button.dataset.id, button]));
   }
 
-  function paint(day, ticks, view) {
+  function paint(day, ticks, view, laps) {
     for (const item of everyItem(day)) {
       const button = view.buttons.get(item.id);
       if (button) button.setAttribute("aria-pressed", String(tickState(item, ticks)));
+      if (button && item.track) {
+        button.querySelector(".name").textContent = tidy(trackTitle(item, laps == null ? item.track.repeats : laps));
+      }
     }
     const { done, total } = progressOf(day, ticks);
     view.progress.style.setProperty("--done", String(total ? done / total : 0));
@@ -431,6 +505,21 @@ const PLAN = {
       while (k > 0.3 && !fits(k)) k = step(k, -0.1);
     }
     root.style.setProperty("--k", String(k));
+  }
+
+  // The Log page: every day, newest first, with a red tick when everything was done.
+  function drawLog(list, entries) {
+    setChildren(list, entries.map((entry) => {
+      const status = entry.complete
+        ? el("span", { class: "log-status done", "aria-label": "All done" }, tickMark())
+        : el("span", { class: "log-status" }, entry.total ? `${entry.done}/${entry.total}` : "–");
+      return el("li", { class: entry.isToday ? "log-day is-today" : "log-day" },
+        el("span", { class: "log-date" }, entry.isToday ? "Today" : entry.label),
+        el("span", { class: "log-what" },
+          el("span", { class: "log-title" }, entry.title),
+          entry.laps != null ? el("span", { class: "log-laps" }, tidy(`${entry.laps} × ${entry.distance || "400 m"}`)) : null),
+        status);
+    }));
   }
 
   // The light/dark switch at the bottom. Until it's tapped, it follows the phone's setting;
@@ -480,9 +569,22 @@ const PLAN = {
       buttons: new Map(),
     };
     const store = createStore(openStorage());
+    const log = {
+      page: document.getElementById("log"),
+      list: document.getElementById("log-list"),
+      open: document.getElementById("log-open"),
+      close: document.getElementById("log-close"),
+    };
     let day = null;
     let ticks = new Set();
+    let laps = null; // laps actually run today (null = the plan's number)
     let timer = 0;
+
+    const saveDay = () => {
+      store.save(day.key, ticks);
+      store.saveRecord(day.key, summarize(day, ticks, laps));
+    };
+    const showLog = () => drawLog(log.list, logEntries(store.records(), day.key, PLAN));
 
     // Show today. Cheap enough to call often: it only redraws when the date has changed.
     function refresh() {
@@ -490,27 +592,51 @@ const PLAN = {
       if (!day || next.key !== day.key) {
         day = next;
         ticks = store.load(day.key);
-        store.prune(day.key);
+        const record = store.loadRecord(day.key);
+        laps = record && record.laps != null ? clampLaps(record.laps) : null;
         draw(day, view);
-        paint(day, ticks, view);
+        paint(day, ticks, view, laps);
         fitToScreen();
+        if (log.page && !log.page.hidden) showLog();
       }
       clearTimeout(timer);
       timer = setTimeout(refresh, msUntilNextCheck(new Date(), PLAN.timeZone));
     }
 
     view.list.addEventListener("click", (event) => {
+      const lap = event.target.closest("button.lap");
       const button = event.target.closest("button.row");
-      if (!button || !day) return;
+      if ((!lap && !button) || !day) return;
       // Midnight passed while yesterday was still on screen: show today instead of ticking.
       if (calendarDate(new Date(), PLAN.timeZone).key !== day.key) {
         refresh();
         return;
       }
-      ticks = toggle(ticks, day, button.dataset.id);
-      store.save(day.key, ticks);
-      paint(day, ticks, view);
+      if (lap) {
+        const track = day.items.find((item) => item.track);
+        laps = clampLaps((laps == null ? track.track.repeats : laps) + Number(lap.dataset.step));
+      } else {
+        ticks = toggle(ticks, day, button.dataset.id);
+      }
+      saveDay();
+      paint(day, ticks, view, laps);
     });
+
+    if (log.page && log.open && log.close) {
+      log.open.addEventListener("click", () => {
+        showLog();
+        log.page.hidden = false;
+        log.page.scrollTop = 0;
+        document.documentElement.classList.add("log-open");
+      });
+      log.close.addEventListener("click", () => {
+        log.page.hidden = true;
+        document.documentElement.classList.remove("log-open");
+      });
+    }
+
+    // Ask the phone to keep this app's saved data even when space runs low (where supported).
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
     // Back on screen (from the background, another app, the lock screen): re-check the date.
     document.addEventListener("visibilitychange", () => {
@@ -563,6 +689,7 @@ const PLAN = {
   const api = {
     PLAN, STORE_PREFIX, wallClock, calendarDate, trackRepeats, msUntilNextCheck,
     buildDay, tickState, progressOf, toggle, createStore, memoryStorage,
+    summarize, logEntries, trackTitle, clampLaps, LOG_PREFIX,
   };
   if (typeof module === "object" && module.exports) module.exports = api; // for the tests
   if (typeof document !== "undefined") boot();

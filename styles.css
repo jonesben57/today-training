@@ -356,7 +356,171 @@ main {
 .foot {
   margin-top: auto;
   padding-top: calc(8px * var(--k));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+
+/* ------------------------------------------- laps − / + on the track row */
+
+.has-laps { position: relative; }
+.has-laps > .row { padding-right: calc(var(--pad-x) + 72px); }
+
+.laps {
+  position: absolute;
+  top: calc(9px * var(--k) - 4px); /* lines up with the row's first line */
+  right: 0;
+  display: flex;
+  gap: 6px;
+}
+
+.lap {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 32px;
+  height: 30px;
+  margin: 0;
+  padding: 0;
+  border: 2px solid var(--box);
+  border-radius: 3px;
+  background: var(--bg);
+  color: var(--ink);
+  font: 700 18px/1 var(--display);
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.lap:active { background: var(--press); border-color: var(--accent); color: var(--accent); }
+.lap:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ------------------------------------------------------------- the log */
+
+.log-open {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  padding: 8px 10px;
+  border: 2px solid var(--ink);
+  border-radius: 3px;
+  background: none;
+  color: var(--ink);
+  font: 700 13px/1 var(--display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+.log {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  background: var(--bg);
+  padding:
+    calc(env(safe-area-inset-top, 0px) + 14px)
+    calc(env(safe-area-inset-right, 0px) + 18px)
+    calc(env(safe-area-inset-bottom, 0px) + 24px)
+    calc(env(safe-area-inset-left, 0px) + 18px);
+}
+
+.log[hidden] { display: none; }
+:root.log-open body { overflow: hidden; }
+
+.log-head {
+  max-width: 480px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 12px;
+  border-bottom: 5px solid var(--bar);
+}
+
+.log-heading {
+  margin: 0;
+  font: 800 48px/0.9 var(--display);
+  text-transform: uppercase;
+}
+
+.log-close {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--ink);
+  color: var(--bg);
+  font: 700 13px/1 var(--display);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.log-list {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.log-day {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.log-date {
+  font: 600 14px/1.2 var(--display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.is-today .log-date { color: var(--accent); }
+
+.log-title {
+  display: block;
+  font: 700 19px/1.15 var(--display);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.log-laps {
+  display: block;
+  font: 600 13px/1.3 var(--display);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.log-status {
+  min-width: 22px;
+  font: 600 14px/1 var(--display);
+  letter-spacing: 0.04em;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+
+/* All done: the same red tick box as on the main page. */
+.log-status.done .mark {
+  margin: 0;
+  width: 22px;
+  height: 22px;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.log-status.done .mark svg { opacity: 1; transform: none; }
 
 .theme {
   -webkit-appearance: none;

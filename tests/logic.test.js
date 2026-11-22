@@ -259,7 +259,7 @@ test("progress counts each exercise and each other item once", () => {
   assert.deepEqual(app.progressOf(day, ticks), { done: gymSize + 1, total: leaves.length });
 });
 
-test("ticks are saved per date: a new day starts empty and old days are cleared", () => {
+test("ticks are saved per date: a new day starts empty and old days are kept for the log", () => {
   const storage = app.memoryStorage();
   storage.setItem("some-other-app", "keep me");
   const store = app.createStore(storage);
@@ -267,10 +267,52 @@ test("ticks are saved per date: a new day starts empty and old days are cleared"
   store.save("2026-11-23", new Set(["snack", "gym/lat-pulldown"]));
   assert.deepEqual([...store.load("2026-11-23")].sort(), ["gym/lat-pulldown", "snack"]);
   assert.equal(store.load("2026-11-24").size, 0, "the next day starts empty");
+  assert.deepEqual([...store.load("2026-11-23")].sort(), ["gym/lat-pulldown", "snack"], "yesterday is still there");
 
-  store.prune("2026-11-24");
-  assert.equal(storage.getItem(`${app.STORE_PREFIX}2026-11-23`), null, "yesterday's ticks are gone");
+  store.saveRecord("2026-11-23", { title: "Pull + run", done: 2, total: 14, laps: 5, distance: "400 m" });
+  store.saveRecord("2026-11-25", { title: "Rest", done: 5, total: 5 });
+  assert.deepEqual(Object.keys(store.records()).sort(), ["2026-11-23", "2026-11-25"]);
   assert.equal(storage.getItem("some-other-app"), "keep me", "nothing else is touched");
+});
+
+test("the day's record: done/total, and laps on track days (plan's number unless changed)", () => {
+  const monday = dayAt("2026-11-23T07:00:00+11:00");
+  const leaves = monday.items.flatMap((i) => (i.children ? i.children : [i]));
+  const all = new Set(leaves.map((i) => i.id));
+  const planned = monday.items.find((i) => i.track).track.repeats;
+
+  assert.deepEqual(app.summarize(monday, new Set(), null),
+    { title: monday.title, done: 0, total: leaves.length, laps: planned, distance: PLAN.track.distance });
+  assert.equal(app.summarize(monday, all, 7).laps, 7, "laps actually run are kept");
+  assert.equal(app.summarize(monday, all, 7).done, leaves.length);
+
+  const tuesday = dayAt("2026-11-24T07:00:00+11:00");
+  assert.equal("laps" in app.summarize(tuesday, new Set(), null), false, "no laps on days without a run");
+
+  assert.equal(app.clampLaps(0), 1);
+  assert.equal(app.clampLaps(6), 6);
+  assert.equal(app.clampLaps(99), 40);
+  const track = monday.items.find((i) => i.track);
+  assert.equal(app.trackTitle(track, 6), `${track.track.label} · 6 × ${PLAN.track.distance}`);
+});
+
+test("the log lists every day from the first one used to today, newest first, ticked when all done", () => {
+  const records = {
+    "2026-11-23": { title: "Pull + run", done: 14, total: 14, laps: 6, distance: "400 m" },
+    "2026-11-25": { title: "Rest", done: 3, total: 5 },
+    "2026-12-31": { title: "Push + run", done: 1, total: 14 }, // a future date never shows
+  };
+  const entries = app.logEntries(records, "2026-11-26", PLAN);
+  assert.deepEqual(entries.map((e) => e.key), ["2026-11-26", "2026-11-25", "2026-11-24", "2026-11-23"]);
+  assert.deepEqual(entries.map((e) => e.label), ["Thu 26 Nov", "Wed 25 Nov", "Tue 24 Nov", "Mon 23 Nov"]);
+  assert.equal(entries[0].isToday, true);
+  assert.equal(entries[0].title, PLAN.week.Thu.title, "a day with no record shows the planned session");
+  assert.equal(entries[0].complete, false);
+  assert.equal(entries[2].total, 0, "a day the app wasn't used is empty");
+  assert.equal(entries[1].complete, false);
+  assert.deepEqual([entries[3].complete, entries[3].laps], [true, 6], "all done → tick; laps kept");
+
+  assert.deepEqual(app.logEntries({}, "2026-11-23", PLAN).map((e) => e.key), ["2026-11-23"], "first day: just today");
 });
 
 test("broken or blocked storage never stops the app", () => {
@@ -284,7 +326,9 @@ test("broken or blocked storage never stops the app", () => {
   const blocked = app.createStore({ get length() { return fail(); }, key: fail, getItem: fail, setItem: fail, removeItem: fail });
   assert.equal(blocked.load("2026-11-23").size, 0);
   assert.doesNotThrow(() => blocked.save("2026-11-23", new Set(["snack"])));
-  assert.doesNotThrow(() => blocked.prune("2026-11-23"));
+  assert.doesNotThrow(() => blocked.saveRecord("2026-11-23", { title: "x", done: 0, total: 1 }));
+  assert.equal(blocked.loadRecord("2026-11-23"), null);
+  assert.deepEqual(blocked.records(), {});
 });
 
 /* ------------------------------------------------------ plan is sound -- */

@@ -57,7 +57,17 @@
       <button type="button" class="theme" id="theme" role="switch" aria-checked="false">
         <span>Dark mode</span><span class="switch" aria-hidden="true"></span>
       </button>
+      <button type="button" class="log-open" id="log-open">Log</button>
     </footer>
   </main>
+
+  <!-- Every day so far, newest first. Read-only; opened with the Log button. -->
+  <section class="log" id="log" aria-label="Log" hidden>
+    <div class="log-head">
+      <h2 class="log-heading">Log</h2>
+      <button type="button" class="log-close" id="log-close">Close</button>
+    </div>
+    <ol class="log-list" id="log-list"></ol>
+  </section>
 </body>
 </html>
