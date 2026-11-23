@@ -1,98 +1,16 @@
 /* =============================================================================
    TODAY — shows today's training session and nothing else.
 
-   ▼ THE PLAN ▼
-   Everything you might want to change is in this one object: exercises,
-   sets, what each day is, the timeline, the track progression.
-   The code underneath adapts on its own. Keep the quotes and commas.
+   The plan (exercises, sets, what each day is, the timeline, the track
+   progression) lives in plan.js, loaded before this file. Edit it there, or in
+   Frank: Training → Edit plan. README.md explains every field.
    ============================================================================= */
 
-const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+// Under node (the tests) plan.js isn't loaded by a page, so load it here.
+if (!globalThis.TODAY_PLAN && typeof require === "function") require("./plan.js");
 
-const PLAN = {
-  // "Today" is worked out in this time zone. Use null to follow the phone's own setting.
-  timeZone: "Australia/Sydney",
-
-  // What each weekday is:
-  //   title   – the big heading
-  //   workout – which gym list (below) to show; leave it out for no gym
-  //   run     – pace for the after-uni track session; leave it out for no track
-  // A day with no workout and no run is a rest day.
-  week: {
-    Mon: { title: "Pull + run", workout: "pull", run: "84 s per 400 m (3:30/km)" },
-    Tue: { title: "Legs",       workout: "legs" },
-    Wed: { title: "Rest" },
-    Thu: { title: "Push + run", workout: "push", run: "96 s per 400 m (4:00/km)" },
-    Fri: { title: "Pull",       workout: "pull" },
-    Sat: { title: "Legs",       workout: "legs" },
-    Sun: { title: "Push",       workout: "push" },
-  },
-
-  // The line under the heading on training days.
-  trainingNote: "2–3 RIR · 2 min rest between sets",
-
-  // Gym sessions. One line per exercise: [name, sets × reps]
-  workouts: {
-    push: [
-      ["Bench press",             "4 × 5–6"],
-      ["Standing overhead press", "3 × 6–8"],
-      ["JM press",                "2 × 8–12"],
-      ["Side lateral raise",      "3 × 10–15"],
-    ],
-    pull: [
-      ["Lat pulldown",            "4 × 6–10"],
-      ["Chest-supported row",     "3 × 8–12"],
-      ["Barbell bicep curl",      "3 × 8–12"],
-      ["Rear delt fly",           "2 × 10–15"],
-    ],
-    legs: [
-      ["Back squat",              "3 × 5–6"],
-      ["Sumo deadlift",           "3 × 3–5"],
-      ["Bulgarian split squat",   "2 × 8–10 each leg"],
-      ["Hip thrust",              "2 × 8–12"],
-      ["Nordic curl",             "3 × 3–5"],
-      ["Leg extension",           "1 × 10–15"],
-    ],
-  },
-
-  // Track session: 400 m repeats. The number of repeats goes up by itself each week.
-  track: {
-    distance: "400 m",
-    rest: "60 s rest",
-    firstWeek: "2026-11-23", // the Monday the count starts (year-month-day)
-    startRepeats: 5,         // repeats in that first week
-    addPerWeek: 1,           // added every Monday after that
-    maxRepeats: 13,          // never more than this
-  },
-
-  // Training-day timeline, top to bottom.
-  //   gym: true   → the day's exercises appear under this item
-  //   track: true → only on days with a run; shows as "Track · 6 × 400 m"
-  //   days: [...] → only on those days (leave out = every day)
-  trainingDay: [
-    { time: "5:45am",    title: "Snack" },
-    { time: "6:00am",    title: "Gym",        gym: true },
-    { time: "Then",      title: "Swim",       detail: "30 min easy" },
-    { time: "8:00am",    title: "Breakfast" },
-    { time: "9am–1pm",   title: "University", days: WEEKDAYS },
-    { time: "1pm–2pm",   title: "Lunch" },
-    { time: "2pm–5pm",   title: "University", days: WEEKDAYS },
-    { time: "After uni", title: "Track",      track: true },
-    { time: "7pm–8pm",   title: "Dinner" },
-    { time: "10:00pm",   title: "Sleep" },
-  ],
-
-  // Rest-day timeline (same "days" rule).
-  restDay: [
-    { time: "9am–1pm",   title: "University", days: WEEKDAYS },
-    { time: "1pm–2pm",   title: "Lunch" },
-    { time: "2pm–5pm",   title: "University", days: WEEKDAYS },
-    { time: "7pm–8pm",   title: "Dinner" },
-    { time: "10:00pm",   title: "Sleep" },
-  ],
-};
-
-/* ============================ end of the plan ============================== */
+const PLAN = globalThis.TODAY_PLAN;
+if (!PLAN) throw new Error("plan.js didn't load");
 
 
 (function () {

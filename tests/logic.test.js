@@ -399,3 +399,26 @@ test("home-screen app wiring: manifest, icons, iOS tags, safe areas, offline fil
   const fontInSw = sw.match(/const FONT_CSS = "([^"]+)"/)[1];
   assert.ok(html.includes(`<link rel="stylesheet" href="${fontInSw}">`), "index.html and sw.js use the same font address");
 });
+
+test("plan.js is plain data: strict JSON between the markers, the same plan the app uses", () => {
+  const text = read("plan.js");
+  const lines = text.split("\n");
+  assert.match(lines[0], /^\/\/ .*Frank.*JSON/, "first line is the explanatory comment");
+  assert.doesNotMatch(lines[0], /\/\*(PLAN|END)\*\//, "the comment never contains the markers themselves");
+  assert.equal(text.split("/*PLAN*/").length, 2, "exactly one start marker");
+  assert.equal(text.split("/*END*/").length, 2, "exactly one end marker");
+  const match = text.match(/\/\*PLAN\*\/([\s\S]*)\/\*END\*\//);
+  assert.ok(match, "plan.js has /*PLAN*/ … /*END*/ markers");
+  const plan = JSON.parse(match[1]);
+  assert.deepEqual(app.PLAN, plan, "app.PLAN equals the JSON in plan.js");
+  // Frank writes the plan back with JSON.stringify(plan, null, 2): that must give the same file.
+  const rewritten = `${lines[0]}\nglobalThis.TODAY_PLAN = /*PLAN*/${JSON.stringify(plan, null, 2)}/*END*/;\n`;
+  assert.equal(text, rewritten, "plan.js is exactly what a rewrite produces");
+
+  const html = read("index.html");
+  assert.ok(html.indexOf('<script src="plan.js" defer>') > -1, "index.html loads plan.js");
+  assert.ok(html.indexOf('<script src="plan.js"') < html.indexOf('<script src="app.js"'), "plan.js loads before app.js");
+  const sw = read("sw.js");
+  assert.match(sw, /const APP_FILES = \[[\s\S]*"plan\.js"[\s\S]*\];/, "plan.js is saved for offline use");
+  assert.match(sw, /for \(const file of \[[^\]]*"plan\.js"/, "plan.js gets a fingerprint like app.js");
+});

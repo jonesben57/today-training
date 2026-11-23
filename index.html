@@ -32,15 +32,16 @@
       if (theme === "light" || theme === "dark") document.documentElement.setAttribute("data-theme", theme);
     } catch (e) { /* no storage: follow the phone */ }
 
-    // If app.js can't start (say, a typo after editing the plan), say so instead of showing a blank page.
+    // If the app can't start (say, a typo after editing plan.js), say so instead of showing a blank page.
     addEventListener("error", function (event) {
       var main = document.getElementById("app");
       if (main && !document.body.hasAttribute("data-ready")) {
-        main.textContent = "Couldn't start the app: " + (event.message || "error in app.js");
+        main.textContent = "Couldn't start the app: " + (event.message || "error in plan.js or app.js");
         main.className = "oops";
       }
     });
   </script>
+  <script src="plan.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>

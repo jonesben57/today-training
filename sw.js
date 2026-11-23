@@ -4,7 +4,7 @@
    • First visit: saves every app file and the two fonts on the phone.
    • Every launch: the page comes straight from the saved copy (instant, works
      offline). Then the saved files are compared with the ones on the server; if
-     anything changed (say you edited the plan and pushed it), the new files are
+     anything changed (say you edited plan.js and pushed it), the new files are
      saved and the open page reloads once. No version numbers to bump.
    • Only caches named "today-…" are ever touched, so other sites on the same
      github.io address are left alone.
@@ -21,6 +21,7 @@ const APP_FILES = [
   "./",
   "index.html",
   "styles.css",
+  "plan.js",
   "app.js",
   "manifest.json",
   "icons/icon.svg",
@@ -72,7 +73,7 @@ self.addEventListener("message", (event) => {
   if (event.data && event.data.type === "check") event.waitUntil(checkForUpdate());
 });
 
-// The one page. Its links to app.js and styles.css get a fingerprint of their contents
+// The one page. Its links to plan.js, app.js and styles.css get a fingerprint of their contents
 // ("app.js?v=3k9x1a"), so after an update the browser can't reuse an old copy it still
 // holds in memory: new contents, new address. The saved-file lookup ignores the "?v=".
 async function page() {
@@ -80,7 +81,7 @@ async function page() {
   const saved = await cache.match(SCOPE);
   if (!saved) return fromCache(SCOPE);
   let html = await saved.text();
-  for (const file of ["app.js", "styles.css"]) {
+  for (const file of ["plan.js", "app.js", "styles.css"]) {
     const copy = await cache.match(new URL(file, SCOPE).href);
     if (!copy) continue;
     const tag = fingerprint(new Uint8Array(await copy.arrayBuffer()));

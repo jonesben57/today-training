@@ -14,7 +14,21 @@ Open it once from the home screen while you have signal. After that it works wit
 
 ## Change the plan
 
-Everything lives in the `PLAN` object at the top of `app.js`: exercises, sets, what each weekday is, the timeline and the track progression. Edit it, then:
+Everything lives in `plan.js`: exercises, sets, what each weekday is, the timeline and the track progression. The easy way to change it is Frank on the laptop (Training → Edit plan), which rewrites `plan.js` and pushes it.
+
+To edit it by hand: the part between the `/*PLAN*/` and `/*END*/` markers is strict JSON (Frank reads and writes it), so use double quotes, no trailing commas and no comments. Keep the first line and the markers as they are.
+
+| Field | What it does |
+| --- | --- |
+| `timeZone` | "Today" is worked out in this zone. `null` follows the phone's own setting. |
+| `week` | `Mon`…`Sun`, each `{ "title", "workout", "run" }`. `title` is the big heading. `workout` names a gym list in `workouts` (leave it out for no gym). `run` is the pace for the after-uni track session (leave it out for no track). A day with neither is a rest day. |
+| `trainingNote` | The line under the heading on training days. |
+| `workouts` | Gym lists by name. Each exercise is `["name", "sets × reps"]`. |
+| `track` | 400 m repeats: `distance`, `rest`, `firstWeek` (the Monday the count starts, `YYYY-MM-DD`), `startRepeats` (that first week), `addPerWeek` (added each Monday after) and `maxRepeats` (the cap). |
+| `trainingDay` | The training-day timeline, top to bottom. Each item is `{ "time", "title" }` plus optionally `"detail"`, `"gym": true` (the day's exercises go under it), `"track": true` (only on days with a `run`; shows as "Track · 6 × 400 m") or `"days": ["Mon", …]` (only on those days; leave it out for every day). |
+| `restDay` | The rest-day timeline, with the same rules. |
+
+Then:
 
 ```bash
 node --test
@@ -30,7 +44,7 @@ GitHub Pages republishes within a minute or two. The next time the app opens wit
 
 ## How it works
 
-- **Today** is the calendar date in Australia/Sydney (`PLAN.timeZone`; set it to `null` to follow the phone's own zone). The weekday comes from that date, so daylight saving can't shift it.
+- **Today** is the calendar date in Australia/Sydney (`timeZone` in `plan.js`; set it to `null` to follow the phone's own zone). The weekday comes from that date, so daylight saving can't shift it.
 - **New day:** the date is re-checked just after midnight (and at least once a minute while open), every time the app comes back on screen, and before any tap is saved.
 - **Ticks** are saved on the phone per date (`today.ticks.YYYY-MM-DD`) and kept. A new day starts empty.
 - **Log:** the Log button at the bottom lists every day (newest first) with a red tick when everything was done, otherwise how many were done (e.g. 8/14), plus the laps run on track days. Summaries are kept as `today.log.YYYY-MM-DD`. Deleting the app from the home screen deletes the log too.
@@ -45,7 +59,8 @@ GitHub Pages republishes within a minute or two. The next time the app opens wit
 | --- | --- |
 | `index.html` | the page and the home-screen tags |
 | `styles.css` | the look (light and dark) |
-| `app.js` | `PLAN` at the top, then the logic |
+| `plan.js` | the plan (JSON between two markers) |
+| `app.js` | the logic |
 | `sw.js` | offline storage and self-updating |
 | `manifest.json` | app name, icons, standalone display |
 | `icons/` | home-screen icons (`python3 tools/make-icons.py` redraws them) |
