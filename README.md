@@ -40,7 +40,7 @@ git commit -am "Update plan" && git push
 
 GitHub Pages republishes within a minute or two. The next time the app opens with signal it picks up the change and reloads itself once. There are no version numbers to bump.
 
-`tests/brief.test.js` checks the plan matches the original brief word for word, so it will fail once you change the plan on purpose: update it or delete it. `tests/logic.test.js` keeps checking the date logic either way.
+`tests/plan.test.js` checks the plan's shape (seven days, workouts that exist, `[name, sets]` pairs, sensible track numbers), not its wording, so it keeps passing after any real edit. `tests/logic.test.js` checks the date logic.
 
 ## How it works
 

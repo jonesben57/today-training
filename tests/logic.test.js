@@ -276,7 +276,14 @@ test("ticks are saved per date: a new day starts empty and old days are kept for
 });
 
 test("the day's record: done/total, and laps on track days (plan's number unless changed)", () => {
-  const monday = dayAt("2026-11-23T07:00:00+11:00");
+  // Its own small plan, so this keeps working whatever the real plan says (even with no run days).
+  const plan = {
+    ...PLAN,
+    week: { ...PLAN.week, Mon: { title: "Gym + run", workout: "test", run: "test pace" }, Tue: { title: "Gym", workout: "test" } },
+    workouts: { test: [["Exercise A", "3 × 5"], ["Exercise B", "2 × 8"]] },
+    trainingDay: [{ time: "6:00am", title: "Gym", gym: true }, { time: "After uni", title: "Track", track: true }, { time: "10:00pm", title: "Sleep" }],
+  };
+  const monday = dayAt("2026-11-23T07:00:00+11:00", plan);
   const leaves = monday.items.flatMap((i) => (i.children ? i.children : [i]));
   const all = new Set(leaves.map((i) => i.id));
   const planned = monday.items.find((i) => i.track).track.repeats;
@@ -286,7 +293,7 @@ test("the day's record: done/total, and laps on track days (plan's number unless
   assert.equal(app.summarize(monday, all, 7).laps, 7, "laps actually run are kept");
   assert.equal(app.summarize(monday, all, 7).done, leaves.length);
 
-  const tuesday = dayAt("2026-11-24T07:00:00+11:00");
+  const tuesday = dayAt("2026-11-24T07:00:00+11:00", plan);
   assert.equal("laps" in app.summarize(tuesday, new Set(), null), false, "no laps on days without a run");
 
   assert.equal(app.clampLaps(0), 1);
