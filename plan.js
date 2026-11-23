@@ -3,13 +3,13 @@ globalThis.TODAY_PLAN = /*PLAN*/{
   "timeZone": "Australia/Sydney",
   "week": {
     "Mon": {
-      "title": "Pull + run",
-      "workout": "pull",
-      "run": "84 s per 400 m (3:30/km)"
+      "title": "Pull",
+      "workout": "pull"
     },
     "Tue": {
-      "title": "Legs",
-      "workout": "legs"
+      "title": "Legs + Run",
+      "workout": "legs",
+      "run": "84 s per 400 m (3:30/km)"
     },
     "Wed": {
       "title": "Rest"
