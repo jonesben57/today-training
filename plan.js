@@ -3,31 +3,33 @@ globalThis.TODAY_PLAN = /*PLAN*/{
   "timeZone": "Australia/Sydney",
   "week": {
     "Mon": {
-      "title": "Pull"
+      "title": "Upper then Swim",
+      "workout": "upper"
     },
     "Tue": {
-      "title": "Legs + Run",
-      "workout": "legs",
-      "run": "84 s per 400 m (3:30/km)"
+      "title": "Legs then Swim",
+      "workout": "legs"
     },
     "Wed": {
       "title": "Rest"
     },
     "Thu": {
-      "title": "Push + run",
+      "title": "Upper then Run",
       "workout": "upper",
-      "run": "96 s per 400 m (4:00/km)"
+      "run": "84 s per 400 m (3:30/km)"
     },
     "Fri": {
-      "title": "Pull"
-    },
-    "Sat": {
-      "title": "Legs",
+      "title": "Lower then Swim",
       "workout": "legs"
     },
-    "Sun": {
-      "title": "Push",
+    "Sat": {
+      "title": "Upper then Swim",
       "workout": "upper"
+    },
+    "Sun": {
+      "title": "Run then Lower",
+      "workout": "legs",
+      "run": "84 s per 400 m (3:30/km)"
     }
   },
   "trainingNote": "2 RIR · 2 min rest between sets",
