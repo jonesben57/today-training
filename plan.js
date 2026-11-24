@@ -42,26 +42,46 @@ globalThis.TODAY_PLAN = /*PLAN*/{
         "4 × 10-15"
       ],
       [
-        "Leg",
+        "Leg Extension",
+        "4 × 10-15"
+      ],
+      [
+        "Glute Kickback",
+        "3 × 10-15"
+      ],
+      [
+        "Standing Cable Hip abduction",
         "4 × 10-15"
       ]
     ],
     "upper": [
       [
-        "Bench press",
-        "4 × 5–6"
+        "Overhand Lat Pulldown",
+        "3 × 5-10"
       ],
       [
-        "Standing overhead press",
-        "3 × 6–8"
+        "Incline Dumbbell Bench",
+        "3 × 5-10"
       ],
       [
-        "JM press",
-        "2 × 8–12"
+        "Chest-Supported Row",
+        "3 × 5-10"
       ],
       [
-        "Side lateral raise",
-        "3 × 10–15"
+        "Dips",
+        "3 × 5-10"
+      ],
+      [
+        "Barbell Bicep Curl",
+        "2 × 10-15"
+      ],
+      [
+        "Rear Delt Fly",
+        "2 × 10-15"
+      ],
+      [
+        "Side Lateral Raise",
+        "3 × 10-15"
       ]
     ]
   },
