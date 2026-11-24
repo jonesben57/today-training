@@ -30,7 +30,7 @@ globalThis.TODAY_PLAN = /*PLAN*/{
       "workout": "upper"
     }
   },
-  "trainingNote": "2–3 RIR · 2 min rest between sets",
+  "trainingNote": "2 RIR · 2 min rest between sets",
   "workouts": {
     "legs": [
       [
