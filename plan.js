@@ -156,6 +156,10 @@ globalThis.TODAY_PLAN = /*PLAN*/{
   ],
   "restDay": [
     {
+      "time": "6am-8am",
+      "title": "Breakfast"
+    },
+    {
       "time": "9am–1pm",
       "title": "University",
       "days": [
