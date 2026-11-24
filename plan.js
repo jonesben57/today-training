@@ -3,8 +3,7 @@ globalThis.TODAY_PLAN = /*PLAN*/{
   "timeZone": "Australia/Sydney",
   "week": {
     "Mon": {
-      "title": "Pull",
-      "workout": "pull"
+      "title": "Pull"
     },
     "Tue": {
       "title": "Legs + Run",
@@ -16,12 +15,11 @@ globalThis.TODAY_PLAN = /*PLAN*/{
     },
     "Thu": {
       "title": "Push + run",
-      "workout": "push",
+      "workout": "upper",
       "run": "96 s per 400 m (4:00/km)"
     },
     "Fri": {
-      "title": "Pull",
-      "workout": "pull"
+      "title": "Pull"
     },
     "Sat": {
       "title": "Legs",
@@ -29,12 +27,26 @@ globalThis.TODAY_PLAN = /*PLAN*/{
     },
     "Sun": {
       "title": "Push",
-      "workout": "push"
+      "workout": "upper"
     }
   },
   "trainingNote": "2–3 RIR · 2 min rest between sets",
   "workouts": {
-    "push": [
+    "legs": [
+      [
+        "Squat",
+        "1 × 10-15"
+      ],
+      [
+        "Hamstring Curl",
+        "4 × 10-15"
+      ],
+      [
+        "Leg",
+        "4 × 10-15"
+      ]
+    ],
+    "upper": [
       [
         "Bench press",
         "4 × 5–6"
@@ -50,50 +62,6 @@ globalThis.TODAY_PLAN = /*PLAN*/{
       [
         "Side lateral raise",
         "3 × 10–15"
-      ]
-    ],
-    "pull": [
-      [
-        "Lat pulldown",
-        "4 × 6–10"
-      ],
-      [
-        "Chest-supported row",
-        "3 × 8–12"
-      ],
-      [
-        "Barbell bicep curl",
-        "3 × 8–12"
-      ],
-      [
-        "Rear delt fly",
-        "2 × 10–15"
-      ]
-    ],
-    "legs": [
-      [
-        "Back squat",
-        "3 × 5–6"
-      ],
-      [
-        "Sumo deadlift",
-        "3 × 3–5"
-      ],
-      [
-        "Bulgarian split squat",
-        "2 × 8–10 each leg"
-      ],
-      [
-        "Hip thrust",
-        "2 × 8–12"
-      ],
-      [
-        "Nordic curl",
-        "3 × 3–5"
-      ],
-      [
-        "Leg extension",
-        "1 × 10–15"
       ]
     ]
   },
